@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Dashboard - Aegis Protocol</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>Aegis Protocol</h1>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="how-it-works.html">How It Works</a></li>
+                    <li><a href="dashboard.html" class="active">Live Dashboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Dashboard Layout -->
+    <div class="container dashboard-container">
+        <div class="dashboard-layout">
+            <!-- Left Column: Verified Alerts -->
+            <div class="main-feed">
+                <h2>Verified Claims</h2>
+                <div id="alerts-container">
+                    <!-- Alert cards will be dynamically inserted here -->
+                    <div class="alert-placeholder">
+                        <p>Loading verified claims...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: System Information -->
+            <div class="sidebar">
+                <h2>System Status</h2>
+                <div id="status-container">
+                    <!-- Status messages will be dynamically inserted here -->
+                    <div class="status-message">
+                        <p>[System] Connecting to Aegis Protocol...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 Aegis Protocol. An autonomous fact-checking system.</p>
+        </div>
+    </footer>
+
+    <!-- Supabase and custom script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>

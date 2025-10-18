@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard - Aegis Protocol</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>Aegis Protocol</h1>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="how-it-works.html">How It Works</a></li>
+                    <li><a href="dashboard.html">Live Dashboard</a></li>
+                    <li><a href="debug.html" class="active">Debug</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Debug Controls -->
+    <section class="debug-controls">
+        <div class="container">
+            <h1>Debug Dashboard</h1>
+            <p>Test the frontend with sample data</p>
+            
+            <div class="debug-buttons">
+                <button class="btn btn-primary" onclick="addSampleAlert()">Add Sample Alert</button>
+                <button class="btn btn-primary" onclick="addSampleStatus()">Add Sample Status</button>
+                <button class="btn" onclick="clearAlerts()">Clear Alerts</button>
+                <button class="btn" onclick="clearStatus()">Clear Status</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Layout -->
+    <div class="container dashboard-container">
+        <div class="dashboard-layout">
+            <!-- Left Column: Verified Alerts -->
+            <div class="main-feed">
+                <h2>Verified Alerts</h2>
+                <div id="alerts-container">
+                    <!-- Alert cards will be dynamically inserted here -->
+                    <div class="alert-placeholder">
+                        <p>No alerts yet. Use the debug controls to add sample data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Agent Status -->
+            <div class="sidebar">
+                <h2>Live Agent Status</h2>
+                <div id="status-container">
+                    <!-- Status messages will be dynamically inserted here -->
+                    <div class="status-message">
+                        <p>[Debug] Debug dashboard ready.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 Aegis Protocol. An autonomous fact-checking system.</p>
+        </div>
+    </footer>
+
+    <!-- Supabase and custom script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+
+    <script>
+        // Sample alert data
+        const sampleAlerts = [
+            {
+                verification_status: "False",
+                explanation: "This information has been confirmed as false. High suspicion score and low source credibility indicate misinformation. Our confidence level is 90%.",
+                dossier: {
+                    claim_text: "Scientists confirm that drinking water cures all forms of cancer",
+                    text_suspicion_score: 0.95,
+                    source_credibility_score: 0.15,
+                    research_dossier: {
+                        wikipedia_summary: "Water is a chemical compound made of hydrogen and oxygen. While essential for life, there is no scientific evidence that water alone can cure cancer."
+                    }
+                }
+            },
+            {
+                verification_status: "True",
+                explanation: "This information has been verified as accurate. Low suspicion score and high source credibility suggest authentic information. Our confidence level is 95%.",
+                dossier: {
+                    claim_text: "The Eiffel Tower is located in Paris, France",
+                    text_suspicion_score: 0.05,
+                    source_credibility_score: 0.95,
+                    research_dossier: {
+                        wikipedia_summary: "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France. It is named after the engineer Gustave Eiffel, whose company designed and built the tower."
+                    }
+                }
+            },
+            {
+                verification_status: "Misleading",
+                explanation: "This information may be misleading. Mixed indicators require further investigation for complete accuracy. Our confidence level is 75%.",
+                dossier: {
+                    claim_text: "New government policy will eliminate all taxes starting next month",
+                    text_suspicion_score: 0.70,
+                    source_credibility_score: 0.40,
+                    research_dossier: {
+                        wikipedia_summary: "Tax policy changes typically require legislative processes that take months or years. No official government sources have announced such a policy."
+                    }
+                }
+            }
+        ];
+
+        // Sample status messages
+        const sampleStatuses = [
+            "Coordinator online. Starting scan...",
+            "Scout discovered 3 new claims.",
+            "Dispatched Case #101 to Analyst and Source agents.",
+            "Fusion Agent escalating Case #101 to Research Agent.",
+            "Investigator Agent reviewing Case #101 dossier.",
+            "Herald Agent generating public alert for Case #101.",
+            "Case #101 verdict: False. Alert published to dashboard."
+        ];
+
+        // Function to create an alert card
+        function createAlertCard(alertData) {
+            const alertContainer = document.getElementById('alerts-container');
+            
+            // Remove placeholder if it exists
+            const placeholder = alertContainer.querySelector('.alert-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Create alert card element
+            const alertCard = document.createElement('div');
+            alertCard.className = 'alert-card';
+            
+            // Format the verdict emoji
+            let verdictEmoji = '🟡';
+            if (alertData.verification_status === 'True') {
+                verdictEmoji = '🟢';
+            } else if (alertData.verification_status === 'False') {
+                verdictEmoji = '🔴';
+            }
+            
+            // Create the HTML for the alert card
+            alertCard.innerHTML = `
+                <div class="alert-header">
+                    <div class="alert-verdict">${verdictEmoji}</div>
+                    <div class="alert-claim">${alertData.dossier?.claim_text || 'Claim text not available'}</div>
+                </div>
+                <div class="alert-explanation">${alertData.explanation}</div>
+                <button class="btn-secondary" onclick="toggleDossier(this)">Show Evidence</button>
+                <div class="dossier">
+                    <div class="dossier-item">
+                        <strong>Text Analysis (ML Model):</strong> Suspicion Score: ${(alertData.dossier?.text_suspicion_score * 100).toFixed(0)}%
+                    </div>
+                    <div class="dossier-item">
+                        <strong>Source Profile (Heuristics):</strong> Credibility Score: ${(alertData.dossier?.source_credibility_score * 100).toFixed(0)}%
+                    </div>
+                    <div class="dossier-item">
+                        <strong>Research Dossier (OSINT):</strong> ${alertData.dossier?.research_dossier?.wikipedia_summary || 'No Wikipedia summary available'}
+                    </div>
+                    <div class="dossier-item">
+                        <strong>Final Verdict By:</strong> Investigator Agent
+                    </div>
+                </div>
+            `;
+            
+            // Add the new alert card to the top of the container
+            alertContainer.insertBefore(alertCard, alertContainer.firstChild);
+        }
+
+        // Function to toggle the dossier visibility
+        function toggleDossier(button) {
+            const dossier = button.nextElementSibling;
+            if (dossier.style.display === 'block') {
+                dossier.style.display = 'none';
+                button.textContent = 'Show Evidence';
+            } else {
+                dossier.style.display = 'block';
+                button.textContent = 'Hide Evidence';
+            }
+        }
+
+        // Function to add a status message
+        function addStatusMessage(message) {
+            const statusContainer = document.getElementById('status-container');
+            
+            // Remove initial status message if it exists
+            const initialMessage = statusContainer.querySelector('.status-message p');
+            if (initialMessage && initialMessage.textContent.includes('Debug')) {
+                statusContainer.innerHTML = '';
+            }
+            
+            // Create status message element
+            const statusMessage = document.createElement('div');
+            statusMessage.className = 'status-message';
+            
+            // Get current time
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            statusMessage.innerHTML = `<p>[${timeString}] ${message}</p>`;
+            
+            // Add the new status message to the top of the container
+            statusContainer.insertBefore(statusMessage, statusContainer.firstChild);
+            
+            // Keep only the last 20 messages
+            if (statusContainer.children.length > 20) {
+                statusContainer.removeChild(statusContainer.lastChild);
+            }
+        }
+
+        // Debug functions
+        function addSampleAlert() {
+            const randomAlert = sampleAlerts[Math.floor(Math.random() * sampleAlerts.length)];
+            createAlertCard(randomAlert);
+            addStatusMessage(`Added sample ${randomAlert.verification_status} alert`);
+        }
+
+        function addSampleStatus() {
+            const randomStatus = sampleStatuses[Math.floor(Math.random() * sampleStatuses.length)];
+            addStatusMessage(randomStatus);
+        }
+
+        function clearAlerts() {
+            const alertContainer = document.getElementById('alerts-container');
+            alertContainer.innerHTML = '<div class="alert-placeholder"><p>No alerts yet. Use the debug controls to add sample data.</p></div>';
+        }
+
+        function clearStatus() {
+            const statusContainer = document.getElementById('status-container');
+            statusContainer.innerHTML = '<div class="status-message"><p>[Debug] Status log cleared.</p></div>';
+        }
+    </script>
+</body>
+</html>

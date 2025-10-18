@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works - Aegis Protocol</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>Aegis Protocol</h1>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="how-it-works.html" class="active">How It Works</a></li>
+                    <li><a href="dashboard.html">Live Dashboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <h1 class="section-title">Our Autonomous Agency: A Team of Specialists</h1>
+            <p class="section-subtitle">We turn our "black box" AI into a transparent "glass box" by showing you exactly what our agents do.</p>
+            
+            <div class="agents-grid">
+                <!-- Card 1: Analyst Agent -->
+                <div class="agent-card">
+                    <div class="agent-icon">🧠</div>
+                    <h3>We Analyze the Language</h3>
+                    <h4>The Analyst Agent</h4>
+                    <p>Our ML model, trained on over 78,000 news articles, acts as our first line of defense. It instantly scans the text of a claim, looking for the statistical patterns, emotional language, and stylistic tells commonly found in misinformation to generate a 'Text Suspicion Score'.</p>
+                </div>
+
+                <!-- Card 2: Source Agent -->
+                <div class="agent-card">
+                    <div class="agent-icon">🕵️</div>
+                    <h3>We Profile the Source</h3>
+                    <h4>The Source Agent</h4>
+                    <p>This agent investigates who is making the claim. It analyzes the source's digital footprint—account age, follower ratio, verification status—to produce a 'Source Credibility Score'.</p>
+                </div>
+
+                <!-- Card 3: Research Agent -->
+                <div class="agent-card">
+                    <div class="agent-icon">📚</div>
+                    <h3>We Gather External Evidence</h3>
+                    <h4>The Research Agent</h4>
+                    <p>For suspicious claims, our Research Agent is deployed. It autonomously scours open-source intelligence from services like Wikipedia and web search engines to build a 'dossier' of corroborating or conflicting information.</p>
+                </div>
+
+                <!-- Card 4: Investigator Agent -->
+                <div class="agent-card">
+                    <div class="agent-icon">⚖️</div>
+                    <h3>We Conduct an Expert Review</h3>
+                    <h4>The Investigator Agent</h4>
+                    <p>For the most complex cases, the full dossier is escalated to our Investigator Agent. Powered by the Gemini API, this agent performs deep, human-like reasoning to weigh all evidence and issue a final, confident verdict.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 Aegis Protocol. An autonomous fact-checking system.</p>
+        </div>
+    </footer>
+
+    <!-- Supabase and custom script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
