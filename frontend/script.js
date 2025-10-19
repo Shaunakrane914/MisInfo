@@ -6,90 +6,8 @@
 const SUPABASE_URL = 'https://kyuothttveugcafvleje.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dW90aHR0dmV1Z2NhZnZsZWplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MTc3NTcsImV4cCI6MjA3NjA5Mzc1N30.ayActwdtBDcpw3C2NSnAA_eOi56t7d6qXZPsP4MN7jI';
 
-// Standardized backend port
-const BACKEND_PORT = 8000;
-
-// Initialize Supabase client with proper error handling
-let supabaseClient = null;
-
-// Check if Supabase library is available
-if (typeof supabase !== 'undefined' && supabase.createClient) {
-    try {
-        const { createClient } = supabase;
-        supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('[Frontend] Supabase client initialized successfully');
-    } catch (error) {
-        console.error('[Frontend] Error initializing Supabase client:', error);
-    }
-} else {
-    console.warn('[Frontend] Supabase library not found. Realtime features will be disabled.');
-}
-
-// WebSocket connection for real-time updates
-let websocket = null;
-let reconnectInterval = null;
-
-// Function to connect to WebSocket
-function connectWebSocket() {
-    // Close existing connection if any
-    if (websocket) {
-        websocket.close();
-    }
-    
-    // Clear any existing reconnect interval
-    if (reconnectInterval) {
-        clearInterval(reconnectInterval);
-        reconnectInterval = null;
-    }
-    
-    try {
-        // Connect to WebSocket endpoint - using standardized backend port
-        const wsUrl = `ws://localhost:${BACKEND_PORT}/ws`;
-        websocket = new WebSocket(wsUrl);
-        
-        websocket.onopen = function(event) {
-            console.log('[Frontend] WebSocket connection established');
-            addStatusMessage('WebSocket connection established');
-        };
-        
-        websocket.onmessage = function(event) {
-            console.log('[Frontend] WebSocket message received:', event.data);
-            // Check if this is a ping message
-            if (event.data === "ping") {
-                // Respond to ping to keep connection alive
-                websocket.send("pong");
-                return;
-            }
-            
-            try {
-                const message = JSON.parse(event.data);
-                if (message.type === 'claim_updates') {
-                    addStatusMessage(`Received ${message.count} new claim updates`);
-                    // Refresh the data to show new claims
-                    fetchInitialAlerts();
-                }
-            } catch (e) {
-                console.error('[Frontend] Error parsing WebSocket message:', e);
-            }
-        };
-        
-        websocket.onclose = function(event) {
-            console.log('[Frontend] WebSocket connection closed');
-            addStatusMessage('WebSocket connection closed. Attempting to reconnect...');
-            
-            // Try to reconnect after 5 seconds
-            reconnectInterval = setTimeout(connectWebSocket, 5000);
-        };
-        
-        websocket.onerror = function(error) {
-            console.error('[Frontend] WebSocket error:', error);
-            addStatusMessage('WebSocket connection error');
-        };
-    } catch (error) {
-        console.error('[Frontend] Error creating WebSocket connection:', error);
-        addStatusMessage('Error creating WebSocket connection');
-    }
-}
+// Initialize Supabase client
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Function to create an alert card
 function createAlertCard(alertData) {
@@ -374,9 +292,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Setup real-time subscriptions
             setupRealtimeSubscriptions();
         }
-        
-        // Connect to WebSocket for real-time updates
-        connectWebSocket();
     } else {
         console.warn('[Frontend] Not on dashboard page or required containers not found');
     }
