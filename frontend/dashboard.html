@@ -6,6 +6,7 @@
     <title>Live Dashboard - Aegis Protocol</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -19,6 +20,7 @@
                     <li><a href="index.html">Home</a></li>
                     <li><a href="how-it-works.html">How It Works</a></li>
                     <li><a href="dashboard.html" class="active">Live Dashboard</a></li>
+                    <li><a href="submit.html">Submit Claim</a></li>
                 </ul>
             </nav>
         </div>
@@ -26,10 +28,127 @@
 
     <!-- Dashboard Layout -->
     <div class="container dashboard-container">
+        <!-- Analytics Overview -->
+        <div class="analytics-overview">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="total-claims">0</div>
+                    <div class="stat-label">Total Claims</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="false-claims">0</div>
+                    <div class="stat-label">False Claims</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🟡</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="misleading-claims">0</div>
+                    <div class="stat-label">Misleading</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="true-claims">0</div>
+                    <div class="stat-label">True Claims</div>
+                </div>
+            </div>
+        </div>
+
         <div class="dashboard-layout">
-            <!-- Left Column: Verified Alerts -->
+            <!-- Left Column: Agent Status & Verified Alerts -->
             <div class="main-feed">
-                <h2>Verified Claims</h2>
+                <!-- Agent Status Panel -->
+                <div class="agent-status-panel">
+                    <h2>🤖 Multi-Agent System Status</h2>
+                    <div class="agent-pipeline">
+                        <div class="agent-card" id="scout-agent">
+                            <div class="agent-header">
+                                <span class="agent-icon">🔍</span>
+                                <span class="agent-name">Scout Agent</span>
+                                <span class="agent-status status-idle">●</span>
+                            </div>
+                            <div class="agent-description">Discovering claims</div>
+                            <div class="agent-stats">
+                                <span>Discovered: <strong id="scout-count">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="agent-card" id="analyst-agent">
+                            <div class="agent-header">
+                                <span class="agent-icon">🧠</span>
+                                <span class="agent-name">Analyst Agent</span>
+                                <span class="agent-status status-idle">●</span>
+                            </div>
+                            <div class="agent-description">ML text analysis</div>
+                            <div class="agent-stats">
+                                <span>Analyzed: <strong id="analyst-count">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="agent-card" id="source-agent">
+                            <div class="agent-header">
+                                <span class="agent-icon">👤</span>
+                                <span class="agent-name">Source Profiler</span>
+                                <span class="agent-status status-idle">●</span>
+                            </div>
+                            <div class="agent-description">Credibility scoring</div>
+                            <div class="agent-stats">
+                                <span>Profiled: <strong id="source-count">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="agent-card" id="research-agent">
+                            <div class="agent-header">
+                                <span class="agent-icon">🔬</span>
+                                <span class="agent-name">Research Agent</span>
+                                <span class="agent-status status-idle">●</span>
+                            </div>
+                            <div class="agent-description">Evidence gathering</div>
+                            <div class="agent-stats">
+                                <span>Researched: <strong id="research-count">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="agent-card" id="fusion-agent">
+                            <div class="agent-header">
+                                <span class="agent-icon">⚖️</span>
+                                <span class="agent-name">Fusion Agent</span>
+                                <span class="agent-status status-idle">●</span>
+                            </div>
+                            <div class="agent-description">Decision making</div>
+                            <div class="agent-stats">
+                                <span>Resolved: <strong id="fusion-count">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="agent-card" id="investigator-agent">
+                            <div class="agent-header">
+                                <span class="agent-icon">🕵️</span>
+                                <span class="agent-name">Investigator</span>
+                                <span class="agent-status status-idle">●</span>
+                            </div>
+                            <div class="agent-description">Expert analysis (Gemini)</div>
+                            <div class="agent-stats">
+                                <span>Investigated: <strong id="investigator-count">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="search-filter-bar">
+                    <input type="text" id="search-input" placeholder="🔍 Search claims..." class="search-input">
+                    <select id="verdict-filter" class="filter-select">
+                        <option value="all">All Verdicts</option>
+                        <option value="False">False</option>
+                        <option value="Misleading">Misleading</option>
+                        <option value="True">True</option>
+                    </select>
+                </div>
+
+                <!-- Verified Claims Feed -->
+                <h2>📋 Verified Claims Feed</h2>
                 <div id="alerts-container">
                     <!-- Alert cards will be dynamically inserted here -->
                     <div class="alert-placeholder">
@@ -38,9 +157,22 @@
                 </div>
             </div>
 
-            <!-- Right Column: System Information -->
+            <!-- Right Column: Charts & System Info -->
             <div class="sidebar">
-                <h2>System Status</h2>
+                <!-- Verdict Distribution Chart -->
+                <div class="chart-container">
+                    <h3>Verdict Distribution</h3>
+                    <canvas id="verdictChart"></canvas>
+                </div>
+
+                <!-- Processing Time Chart -->
+                <div class="chart-container">
+                    <h3>Claims Over Time</h3>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+
+                <!-- System Status Log -->
+                <h2>System Activity Log</h2>
                 <div id="status-container">
                     <!-- Status messages will be dynamically inserted here -->
                     <div class="status-message">
@@ -60,6 +192,6 @@
 
     <!-- Supabase and custom script -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 </body>
 </html>

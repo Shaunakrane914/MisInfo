@@ -4,9 +4,10 @@ Expert fact-checking agent that analyzes evidence and makes final determinations
 """
 
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import json
 import os
+import urllib.parse
 
 from .base_agent import BaseAgent, AgentTask, AgentStatus, TaskPriority
 from backend.prompts import INVESTIGATOR_MANDATE
@@ -19,10 +20,11 @@ logger = logging.getLogger(__name__)
 class InvestigatorAgent(BaseAgent):
     """Agent responsible for expert fact-checking analysis"""
     
-    def __init__(self, agent_id: str = "investigator_agent_001", gemini_api_key: str = None):
+    def __init__(self, agent_id: str = "investigator_agent_001", gemini_api_key: Optional[str] = None, supabase_client=None):
         super().__init__(agent_id, "InvestigatorAgent")
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
         self.use_gemini = self.gemini_api_key is not None
+        self.supabase_client = supabase_client
         
         if self.use_gemini:
             try:
@@ -39,6 +41,62 @@ class InvestigatorAgent(BaseAgent):
                 self.use_gemini = False
         else:
             logger.info(f"[{self.agent_name}] No Gemini API key found, using mock implementation")
+    
+    async def assess_source_credibility(self, source_name: str, source_url: str) -> float:
+        """
+        Assess the credibility of a news source using the Gemini model.
+        
+        Args:
+            source_name (str): The name of the news source
+            source_url (str): The URL of the news source
+            
+        Returns:
+            float: A credibility score between 0.0 (very unreliable) and 1.0 (very reliable)
+        """
+        # Handle case where Gemini is not available
+        if not self.use_gemini:
+            logger.warning(f"[{self.agent_name}] Gemini not available, returning default credibility score of 0.5")
+            return 0.5
+        
+        try:
+            # Extract domain name from URL
+            domain_name = ""
+            try:
+                parsed_url = urllib.parse.urlparse(source_url)
+                domain_name = parsed_url.netloc or parsed_url.path
+            except Exception as e:
+                logger.warning(f"[{self.agent_name}] Error parsing URL '{source_url}': {e}")
+                domain_name = source_url  # Fallback to using the full URL
+            
+            # Construct prompt for Gemini
+            prompt = f"Please assess the general credibility of the news source named '{source_name}' often found at the domain '{domain_name}'. Consider factors like journalistic standards, reputation for accuracy, potential bias, and ownership. Provide a credibility score between 0.0 (very unreliable) and 1.0 (very reliable) and a brief justification. Respond ONLY with JSON like: {{\"score\": 0.X, \"justification\": \"Brief reason...\"}}"
+            
+            logger.info(f"[{self.agent_name}] Assessing credibility for source '{source_name}' at domain '{domain_name}'")
+            
+            # Send prompt to Gemini model
+            response = await self.model.generate_content_async(prompt)
+            
+            # Parse the response
+            try:
+                result = json.loads(response.text)
+                score = result.get("score")
+                justification = result.get("justification", "")
+                
+                # Validate score
+                if isinstance(score, (int, float)) and 0.0 <= score <= 1.0:
+                    logger.info(f"[{self.agent_name}] Source credibility assessment for '{source_name}': score={score}, justification='{justification}'")
+                    return float(score)
+                else:
+                    logger.warning(f"[{self.agent_name}] Invalid score '{score}' returned from Gemini for source '{source_name}', defaulting to 0.5")
+                    return 0.5
+                    
+            except json.JSONDecodeError as e:
+                logger.warning(f"[{self.agent_name}] Error parsing JSON response from Gemini for source '{source_name}': {e}, defaulting to 0.5")
+                return 0.5
+                
+        except Exception as e:
+            logger.error(f"[{self.agent_name}] Error during source credibility assessment for '{source_name}': {e}")
+            return 0.5
     
     async def analyze_with_gemini(self, case_file: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -121,6 +179,45 @@ class InvestigatorAgent(BaseAgent):
         logger.info(f"[{self.agent_name}] Verdict: {verdict}, Confidence: {confidence:.2f}")
         return result
     
+    def increment_retry_count(self, claim_id: int):
+        """
+        Increment the retry_count for a claim and update its status.
+        
+        Args:
+            claim_id (int): The ID of the claim to update
+        """
+        if not self.supabase_client:
+            logger.warning(f"[{self.agent_name}] Cannot increment retry count - no Supabase client")
+            return
+        
+        try:
+            # Get current retry count
+            response = self.supabase_client.table("raw_claims").select("retry_count").eq("claim_id", claim_id).execute()
+            
+            if response.data:
+                current_retry_count = response.data[0].get("retry_count", 0)
+                new_retry_count = current_retry_count + 1
+                
+                # Update retry count and status
+                update_data = {
+                    "retry_count": new_retry_count,
+                    "status": "investigation_failed"
+                }
+                
+                self.supabase_client.table("raw_claims").update(update_data).eq("claim_id", claim_id).execute()
+                logger.info(f"[{self.agent_name}] Incremented retry_count to {new_retry_count} for claim {claim_id}")
+                
+                # Log the failure
+                log_entry = {
+                    "log_message": f"Investigation failed for claim {claim_id}. Retry count: {new_retry_count}/3"
+                }
+                self.supabase_client.table("system_logs").insert(log_entry).execute()
+            else:
+                logger.error(f"[{self.agent_name}] Claim {claim_id} not found in database")
+                
+        except Exception as e:
+            logger.error(f"[{self.agent_name}] Error incrementing retry count: {e}")
+    
     async def process_task(self, task: AgentTask) -> Dict[str, Any]:
         """
         Process a task to investigate a claim.
@@ -141,13 +238,22 @@ class InvestigatorAgent(BaseAgent):
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in case_file_json: {e}")
         
+        # Extract claim_id for retry tracking
+        claim_id = case_file.get("claim_id")
+        
         # Perform analysis using either Gemini or mock implementation
         if self.use_gemini:
             try:
                 result = await self.analyze_with_gemini(case_file)
             except Exception as e:
-                logger.warning(f"[{self.agent_name}] Gemini analysis failed, falling back to mock: {e}")
-                result = self.analyze_with_mock(case_file)
+                logger.error(f"[{self.agent_name}] Gemini analysis failed: {e}")
+                
+                # Increment retry count if we have claim_id and supabase client
+                if claim_id and self.supabase_client:
+                    self.increment_retry_count(claim_id)
+                
+                # Re-raise the exception to let coordinator know it failed
+                raise RuntimeError(f"Investigator analysis failed: {e}")
         else:
             result = self.analyze_with_mock(case_file)
         

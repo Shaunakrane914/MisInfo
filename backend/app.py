@@ -287,6 +287,63 @@ class DemoClaim(BaseModel):
     source_metadata_json: str
 
 
+class SubmitClaim(BaseModel):
+    claim_text: str
+    source_url: str = ""
+
+
+@app.post("/api/submit-claim")
+async def submit_claim(claim: SubmitClaim):
+    """Public endpoint for submitting claims from the frontend"""
+    global supabase_client
+    
+    if supabase_client is None:
+        return {"error": "Supabase client not initialized"}
+    
+    try:
+        # Get the default event ID
+        event_response = supabase_client.table("events").select("event_id").limit(1).execute()
+        if not event_response.data:
+            return {"error": "No events found in database"}
+        
+        default_event_id = event_response.data[0]["event_id"]
+        
+        # Create source metadata
+        source_metadata = {
+            "source_url": claim.source_url or "manual_submission",
+            "submitted_via": "web_form",
+            "account_age_days": 365,
+            "followers": 1000,
+            "following": 500,
+            "is_verified": False
+        }
+        
+        # Insert the claim
+        claim_data = {
+            "event_id": default_event_id,
+            "claim_text": claim.claim_text,
+            "source_metadata_json": json.dumps(source_metadata),
+            "status": "pending_initial_analysis"
+        }
+        
+        response = supabase_client.table("raw_claims").insert(claim_data).execute()
+        
+        # Log this action
+        log_entry = {
+            "log_message": f"Claim submitted via web form: {claim.claim_text[:50]}..."
+        }
+        supabase_client.table("system_logs").insert(log_entry).execute()
+        
+        return {
+            "status": "success",
+            "message": "Claim submitted successfully",
+            "claim_id": response.data[0]["claim_id"] if response.data else None
+        }
+    except Exception as e:
+        logger.error(f"Error submitting claim: {e}")
+        return {"error": f"Failed to submit claim: {str(e)}"}
+
+
 @app.post("/seed-demo-claim")
 async def seed_demo_claim(claim: DemoClaim):
     """Insert a demo claim directly into the raw_claims table to trigger agent processing"""
