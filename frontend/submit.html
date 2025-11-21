@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Claim - Aegis Protocol</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:ital,wght@1,700;1,800&display=swap" rel="stylesheet">
     <style>
         .submit-container {
             max-width: 800px;
             margin: 50px auto;
             padding: 40px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
         }
         
         .form-group {
@@ -30,39 +31,44 @@
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 9999px;
             font-size: 16px;
             font-family: 'Inter', sans-serif;
-            transition: border-color 0.3s;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            background: rgba(255,255,255,.95);
+            color: #0f172a;
         }
         
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: #6d28d9;
+            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
         }
         
         .form-group textarea {
-            min-height: 120px;
+            min-height: 140px;
             resize: vertical;
+            border-radius: 16px;
         }
         
         .submit-btn {
-            background: #4CAF50;
-            color: white;
-            padding: 15px 40px;
+            background: #6d28d9;
+            color: #fff;
+            padding: 14px 36px;
             border: none;
-            border-radius: 8px;
+            border-radius: 9999px;
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.2s;
+            box-shadow: 0 10px 25px rgba(109,40,217,.25);
         }
         
         .submit-btn:hover {
-            background: #45a049;
+            background: #5b21b6;
         }
         
         .submit-btn:disabled {
@@ -90,10 +96,11 @@
         }
         
         .examples {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, rgba(253, 186, 116, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%);
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 16px;
             margin-top: 30px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
         }
         
         .examples h3 {
@@ -113,12 +120,12 @@
         
         .examples li:before {
             content: "→ ";
-            color: #4CAF50;
+            color: #6d28d9;
             font-weight: bold;
         }
     </style>
 </head>
-<body>
+<body class="site">
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -127,12 +134,15 @@
             </div>
             <nav class="nav">
                 <ul>
-                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html">About</a></li>
                     <li><a href="how-it-works.html">How It Works</a></li>
                     <li><a href="dashboard.html">Live Dashboard</a></li>
                     <li><a href="submit.html" class="active">Submit Claim</a></li>
                 </ul>
             </nav>
+            <div class="header-cta">
+                <a href="dashboard.html" class="pill-cta">Let’s Collaborate</a>
+            </div>
         </div>
     </header>
 
